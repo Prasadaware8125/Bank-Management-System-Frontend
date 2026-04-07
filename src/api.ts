@@ -1,4 +1,4 @@
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || "http://127.0.0.1:5000/api";
+const API_BASE = "https://bank-management-system-backend-3gjf.onrender.com/api";
 
 const request = async (path: string, method = "GET", body?: unknown, token?: string) => {
   try {
@@ -11,12 +11,23 @@ const request = async (path: string, method = "GET", body?: unknown, token?: str
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Request failed");
+    const raw = await response.text();
+    let data: any = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch {
+      data = {};
+    }
+
+    if (!response.ok) {
+      throw new Error(data.message || `Request failed (${response.status})`);
+    }
     return data;
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error("Cannot reach backend server. Start backend at http://127.0.0.1:5000.");
+      throw new Error(
+        `Cannot reach backend server at ${API_BASE}. If using Render, wait 30-60s for cold start and verify CORS/network.`
+      );
     }
     throw error;
   }
